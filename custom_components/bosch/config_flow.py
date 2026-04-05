@@ -215,57 +215,136 @@ class BoschFlowHandler(config_entries.ConfigFlow):
                     errors=errors,
                 )
 
-            from bosch_thermostat_client.gateway.oauth2 import Oauth2Gateway
+            self._access_token = self._oauth_connector._access_token
+            self._refresh_token = self._oauth_connector._refresh_token
+            self._token_expires_at = self._oauth_connector._token_expires_at
 
-            access_token = self._oauth_connector._access_token
-            refresh_token = self._oauth_connector._refresh_token
-            token_expires_at = self._oauth_connector._token_expires_at
-
+            # Check if the gateway is already claimed
+            session = async_get_clientsession(self.hass)
             try:
-                gateway = Oauth2Gateway(
-                    session=async_get_clientsession(self.hass),
-                    device_type=EASYCONTROL,
-                    host=self._host,
-                    access_token=access_token,
-                    refresh_token=refresh_token,
-                    token_expires_at=(
-                        token_expires_at.isoformat() if token_expires_at else None
-                    ),
-                )
-                try:
-                    uuid = await gateway.check_connection()
-                except (FirmwareException, UnknownDevice) as err:
-                    create_notification_firmware(hass=self.hass, msg=err)
-                    uuid = gateway.uuid
-            except (DeviceException, EncryptionException) as err:
-                _LOGGER.error("Cannot connect to EasyControl %s: %s", self._host, err)
-                return self.async_abort(reason="faulty_credentials")
+                from aiohttp import ClientTimeout
+                url = f"{Oauth2Connector.POINTTAPI_BASE_URL}"
+                headers = {"Authorization": f"Bearer {self._access_token}"}
+                async with session.get(url, headers=headers, timeout=ClientTimeout(total=10)) as resp:
+                    if resp.status == 200:
+                        gateways = await resp.json()
+                        device_ids = [gw.get("deviceId") for gw in gateways]
+                        if self._host in device_ids:
+                            _LOGGER.debug("Gateway %s already claimed", self._host)
+                            return await self._easycontrol_create_entry()
             except Exception as err:
-                _LOGGER.error("Unexpected error connecting EasyControl %s: %s", self._host, err)
-                return self.async_abort(reason="unknown")
+                _LOGGER.debug("Gateway list check failed: %s", err)
 
-            if uuid:
-                await self.async_set_unique_id(str(uuid))
-                self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(
-                title=gateway.device_name or "Bosch EasyControl",
-                data={
-                    CONF_ADDRESS: self._host,
-                    UUID: uuid,
-                    ACCESS_KEY: "",
-                    ACCESS_TOKEN: access_token,
-                    REFRESH_TOKEN: refresh_token,
-                    TOKEN_EXPIRES_AT: (
-                        token_expires_at.isoformat() if token_expires_at else None
-                    ),
-                    CONF_DEVICE_TYPE: EASYCONTROL,
-                    CONF_PROTOCOL: HTTP,
-                },
+            # Gateway not claimed — ask for credentials to claim it
+            return self.async_show_form(
+                step_id="easycontrol_claim",
+                data_schema=vol.Schema({
+                    vol.Required("access_code"): str,
+                    vol.Required("user_password"): str,
+                }),
+                errors=errors,
             )
 
         # Should not normally reach here (redirected from easycontrol_serial)
         return self.async_abort(reason="unknown")
+
+    async def async_step_easycontrol_claim(self, user_input=None):
+        """Step 3 of EasyControl POINTT OAuth: claim the gateway."""
+        errors = {}
+        if user_input is not None:
+            import json as json_mod
+            session = async_get_clientsession(self.hass)
+            claim_url = f"{Oauth2Connector.POINTTAPI_BASE_URL}"
+            headers = {
+                "Authorization": f"Bearer {self._access_token}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "deviceId": self._host,
+                "gatewayPassword": user_input["access_code"],
+                "userPassword": user_input["user_password"],
+            }
+
+            try:
+                from aiohttp import ClientTimeout
+                async with session.post(
+                    claim_url,
+                    headers=headers,
+                    json=payload,
+                    timeout=ClientTimeout(total=10),
+                ) as resp:
+                    if resp.status == 201:
+                        _LOGGER.info("Successfully claimed gateway %s", self._host)
+                        return await self._easycontrol_create_entry()
+                    else:
+                        body = await resp.text()
+                        _LOGGER.error(
+                            "Gateway claiming failed: HTTP %s - %s", resp.status, body
+                        )
+                        errors["base"] = "cannot_connect"
+            except Exception as err:
+                _LOGGER.error("Gateway claiming error: %s", err)
+                errors["base"] = "cannot_connect"
+
+        return self.async_show_form(
+            step_id="easycontrol_claim",
+            data_schema=vol.Schema({
+                vol.Required("access_code"): str,
+                vol.Required("user_password"): str,
+            }),
+            errors=errors,
+        )
+
+    async def _easycontrol_create_entry(self):
+        """Create config entry after successful OAuth + claiming."""
+        from bosch_thermostat_client.gateway.oauth2 import Oauth2Gateway
+
+        access_token = self._access_token
+        refresh_token = self._refresh_token
+        token_expires_at = self._token_expires_at
+
+        try:
+            gateway = Oauth2Gateway(
+                session=async_get_clientsession(self.hass),
+                device_type=EASYCONTROL,
+                host=self._host,
+                access_token=access_token,
+                refresh_token=refresh_token,
+                token_expires_at=(
+                    token_expires_at.isoformat() if token_expires_at else None
+                ),
+            )
+            try:
+                uuid = await gateway.check_connection()
+            except (FirmwareException, UnknownDevice) as err:
+                create_notification_firmware(hass=self.hass, msg=err)
+                uuid = gateway.uuid
+        except (DeviceException, EncryptionException) as err:
+            _LOGGER.error("Cannot connect to EasyControl %s: %s", self._host, err)
+            return self.async_abort(reason="faulty_credentials")
+        except Exception as err:
+            _LOGGER.error("Unexpected error connecting EasyControl %s: %s", self._host, err)
+            return self.async_abort(reason="unknown")
+
+        if uuid:
+            await self.async_set_unique_id(str(uuid))
+            self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=gateway.device_name or "Bosch EasyControl",
+            data={
+                CONF_ADDRESS: self._host,
+                UUID: uuid,
+                ACCESS_KEY: "",
+                ACCESS_TOKEN: access_token,
+                REFRESH_TOKEN: refresh_token,
+                TOKEN_EXPIRES_AT: (
+                    token_expires_at.isoformat() if token_expires_at else None
+                ),
+                CONF_DEVICE_TYPE: EASYCONTROL,
+                CONF_PROTOCOL: HTTP,
+            },
+        )
 
     async def configure_gateway(
         self, device_type, session_type, host, access_token, password=None, session=None
