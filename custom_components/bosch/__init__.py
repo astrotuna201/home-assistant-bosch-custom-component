@@ -253,6 +253,16 @@ class BoschGatewayEntry:
                 refresh_token=self._refresh_token,
                 token_expires_at=self._token_expires_at,
             )
+        elif self._device_tpye == IVT:
+            from bosch_thermostat_client.gateway.oauth2 import Oauth2Gateway
+            self.gateway = Oauth2Gateway(
+                session=async_get_clientsession(self.hass),
+                device_type=self._device_type,
+                host=self._host,
+                access_token=self._access_token,
+                refresh_token=self._refresh_token,
+                token_expires_at=self._token_expires_at,
+            )
         else:
             BoschGateway = bosch.gateway_chooser(device_type=self._device_type)
             self.gateway = BoschGateway(

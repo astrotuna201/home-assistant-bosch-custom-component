@@ -51,6 +51,28 @@
                     "access_code": "Access code (from device label)",
                     "user_password": "Password (set in EasyControl app)"
                 }
+            },
+            "ivt_serial": {
+                "title": "Bosch IVT — POINTT API setup (step 1/3)",
+                "description": "Enter the serial number of your IVT device (e.g. 101714742). You can find it on the device label or in the Bosch/MyBuderus app.",
+                "data": {
+                    "address": "Device serial number"
+                }
+            },
+            "ivt_oauth": {
+                "title": "Bosch IVT — POINTT API setup (step 2/3)",
+                "description": "1. Open this URL in your browser and log in with your Bosch SingleKey ID account:\n\n{auth_url}\n\n2. After login you will be redirected to a URL starting with `com.bosch.tt.dashtt.pointt://app/login?code=...`. Copy the full URL and paste it below.",
+                "data": {
+                    "redirect_url": "Redirect URL (from browser after login)"
+                }
+            },
+            "ivt_claim": {
+                "title": "Bosch IVT — POINTT API setup (step 3/3)",
+                "description": "Your device needs to be registered with your Bosch account. Enter the credentials from your device label and the Bosch/MyBuderus app.",
+                "data": {
+                    "access_code": "Access code (from device label)",
+                    "user_password": "Password (set in Bosch/MyBuderus app)"
+                }
             }
         },
         "error": {
