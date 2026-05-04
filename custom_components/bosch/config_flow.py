@@ -133,6 +133,7 @@ class BoschFlowHandler(config_entries.ConfigFlow):
             errors=errors,
         )
 
+
     async def async_step_http_config(self, user_input=None):
         if user_input is not None:
             self._host = user_input[CONF_ADDRESS]

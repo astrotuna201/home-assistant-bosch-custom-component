@@ -232,6 +232,7 @@ class BoschGatewayEntry:
         self.supported_platforms = []
         self._update_lock = None
 
+
     @property
     def device_id(self) -> str:
         return self.config_entry.entry_id
