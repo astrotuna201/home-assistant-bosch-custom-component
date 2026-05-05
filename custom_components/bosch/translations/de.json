@@ -1,6 +1,5 @@
 {
   "config": {
-      "title": "Bosch Thermostat",
       "step": {
           "choose_type": {
               "title": "Choose device type.",

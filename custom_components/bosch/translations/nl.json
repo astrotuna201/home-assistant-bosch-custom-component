@@ -1,6 +1,5 @@
 {
   "config": {
-      "title": "Bosch thermostaat",
       "step": {
           "choose_type": {
               "title": "Kies apparaattype.",

@@ -1,6 +1,5 @@
 {
     "config": {
-        "title": "Termostato Bosch",
         "step": {
             "choose_type": {
                 "title": "Selezione dispositivo.",
