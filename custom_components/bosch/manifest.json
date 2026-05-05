@@ -7,7 +7,7 @@
   "after_dependencies": ["http", "recorder"],
   "codeowners": ["@pszafer"],
   "requirements": ["bosch-thermostat-client @ git+https://github.com/astrotuna201/bosch-thermostat-client-python.git@fix/easycontrol-model-detection4"],
-  "version": "0.28.7",
+  "version": "0.28.8",
   "zeroconf": ["_buderus._tcp.local."],
   "config_flow": true,
   "iot_class": "cloud_polling"
