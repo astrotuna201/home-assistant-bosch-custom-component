@@ -67,7 +67,7 @@ class BoschFlowHandler(config_entries.ConfigFlow):
         errors = {}
         if user_input is not None:
             self._choose_type = user_input[CONF_DEVICE_TYPE]
-            _LOGGER.info("async_step_choose_type choise: %s", self._choose_type)
+            _LOGGER.info("async_step_choose_type choice: %s", self._choose_type)
             if self._choose_type == BUDERUS:
                 return self.async_show_form(
                     step_id="buderus_serial",
