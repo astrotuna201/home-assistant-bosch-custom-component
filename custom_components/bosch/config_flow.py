@@ -67,18 +67,7 @@ class BoschFlowHandler(config_entries.ConfigFlow):
         errors = {}
         if user_input is not None:
             self._choose_type = user_input[CONF_DEVICE_TYPE]
-            if self._choose_type == IVT:
-                #return self.async_show_form(
-                #    step_id="protocol",
-                #    data_schema=vol.Schema(
-                #        {
-                #            vol.Required(CONF_PROTOCOL): vol.All(
-                #                vol.Upper, vol.In(PROTOCOLS)
-                #            ),
-                #        }
-                #    ),
-                #    errors=errors,
-                #)
+            if self._choose_type in (IVT, BUDERUS):
                 return self.async_show_form(
                     step_id="ivt_serial",
                     data_schema=vol.Schema(
