@@ -695,7 +695,7 @@ class BoschFlowHandler(config_entries.ConfigFlow):
             _LOGGER.error("Cannot connect to BUDERUS %s: %s", self._host, err)
             return self.async_abort(reason="faulty_credentials")
         except Exception as err:
-            _LOGGER.error("Unexpected error connecting IVT %s: %s", self._host, err)
+            _LOGGER.error("Unexpected error connecting BUDERUS %s: %s", self._host, err)
             return self.async_abort(reason="unknown")
 
         if uuid:
