@@ -241,7 +241,7 @@ class BoschGatewayEntry:
         """Init async items in entry."""
         import bosch_thermostat_client as bosch
         from bosch_thermostat_client.const.easycontrol import EASYCONTROL
-        from bosch_thermostat_client.const.ivt import IVT, IVT_MBLAN, BUDERUS
+        from bosch_thermostat_client.const.ivt import IVT, IVTAIR, IVT_MBLAN, BUDERUS
         from bosch_thermostat_client.const.nefit import NEFIT
         _LOGGER.debug("Initializing Bosch integration.")
         self._update_lock = asyncio.Lock()
