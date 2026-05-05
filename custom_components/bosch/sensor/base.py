@@ -115,7 +115,7 @@ class BoschBaseSensor(BoschEntity, SensorEntity):
             if not self._bosch_object.update_initialized:
                 self._state = (
                     None
-                    if self._attr_state_class
+                    if hasattr(self, '_attr_state_class') and self._attr_state_class
                     and self._attr_state_class == "measurement"
                     else self._bosch_object.state
                 )
