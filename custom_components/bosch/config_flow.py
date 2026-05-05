@@ -579,7 +579,7 @@ class BoschFlowHandler(config_entries.ConfigFlow):
             if not success:
                 errors["base"] = "cannot_connect"
                 return self.async_show_form(
-                    step_id="buserus_oauth",
+                    step_id="buderus_oauth",
                     data_schema=vol.Schema({vol.Required("redirect_url"): str}),
                     description_placeholders={
                         "auth_url": self._oauth_connector.build_auth_url()
