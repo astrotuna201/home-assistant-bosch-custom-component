@@ -241,7 +241,8 @@ class BoschGatewayEntry:
         """Init async items in entry."""
         import bosch_thermostat_client as bosch
         from bosch_thermostat_client.const.easycontrol import EASYCONTROL
-
+        from bosch_thermostat_client.const.ivt import IVT, IVT_MBLAN, BUDERUS
+        from bosch_thermostat_client.const.nefit import NEFIT
         _LOGGER.debug("Initializing Bosch integration.")
         self._update_lock = asyncio.Lock()
         if self._device_type == EASYCONTROL:
@@ -255,6 +256,16 @@ class BoschGatewayEntry:
                 token_expires_at=self._token_expires_at,
             )
         elif self._device_type == IVT:
+            from bosch_thermostat_client.gateway.oauth2 import Oauth2Gateway
+            self.gateway = Oauth2Gateway(
+                session=async_get_clientsession(self.hass),
+                device_type=self._device_type,
+                host=self._host,
+                access_token=self._access_token,
+                refresh_token=self._refresh_token,
+                token_expires_at=self._token_expires_at,
+            )
+        elif self._device_type == BUDERUS:
             from bosch_thermostat_client.gateway.oauth2 import Oauth2Gateway
             self.gateway = Oauth2Gateway(
                 session=async_get_clientsession(self.hass),
